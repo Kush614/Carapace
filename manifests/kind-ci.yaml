@@ -1,0 +1,11 @@
+# Slim single-node kind config for CI (fast, deterministic). Default CNI
+# disabled so Calico can enforce NetworkPolicy for real — the demo-laptop
+# multi-node config is manifests/kind-cluster.yaml.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: carapace-ci
+networking:
+  disableDefaultCNI: true
+  podSubnet: "192.168.0.0/16"   # Calico default
+nodes:
+  - role: control-plane

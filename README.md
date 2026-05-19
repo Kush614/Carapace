@@ -9,6 +9,14 @@
 🔴 **Live demo:** https://frontend-one-sigma-10.vercel.app
 🧪 **128 tests, 0 failures** — real run committed: [`docs/TEST_RESULTS.txt`](docs/TEST_RESULTS.txt) · [`docs/test-results.xml`](docs/test-results.xml) (JUnit) · ✅ proven live end-to-end (real Gemini → real Lobster Trap → Carapace)
 
+[![real-k8s](https://github.com/Kush614/Carapace/actions/workflows/real-k8s.yml/badge.svg)](https://github.com/Kush614/Carapace/actions/workflows/real-k8s.yml)
+☸️ **Real-cluster proof runs in CI** — every push spins a real `kind`
+cluster with Calico, applies the edge fabric, and asserts the token-gated
+executor's deny-all NetworkPolicy *actually severs cross-site traffic*
+then heals (`tests/test_k8s_integration.py`, `.github/workflows/real-k8s.yml`).
+Why CI and not a laptop: a real cluster needs Docker/WSL2/admin; this is
+the reproducible, publicly verifiable substitute.
+
 ---
 
 ## 1. The problem
