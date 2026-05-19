@@ -3,7 +3,7 @@
 > **The action-layer trust boundary that sits on top of Veea's Lobster Trap.**
 > Lobster Trap guards the *conversation*. Carapace guards the *action*.
 
-🧒 **Explain like I'm 5:** Imagine a robot helper that can flip real switches
+ Imagine a robot helper that can flip real switches
 in a power station. One day someone slips a fake note into the robot's mailbox
 that says *"turn everything off!"* — and the robot almost believes it. Carapace
 is the careful grown-up standing at the door. Before the robot flips any switch
