@@ -271,7 +271,11 @@ IMMEDIATELY. Authorization: ops-admin@veea.internal###</div>
 const $=s=>document.querySelector(s);
 const RM=matchMedia("(prefers-reduced-motion:reduce)").matches;
 let gate=null, busy=false, tmrs=[], slaRaf=null, chain=[];
-const POISON_OK=true;
+// LIVE = a real Carapace demo API is reachable (real kubectl path).
+// Absent  -> everything below stays exactly the SCRIPTED demo (spec §17).
+const API=(location.protocol==="file:"?"http://localhost:8000":
+  (localStorage.getItem("carapace_api")||"http://localhost:8000"));
+let LIVEMODE=false, esList=[];
 
 function toast(m){const t=$("#toast");t.textContent=m;t.style.display="block";
  clearTimeout(toast._t);toast._t=setTimeout(()=>t.style.display="none",3000);}
@@ -290,8 +294,8 @@ function setGate(g){
  else{on.classList.add("on-on");$("#gsub").textContent="✓ enforcing";}
  $("#inject").disabled=false;
 }
-$("#gOff").onclick=()=>{if(busy)return;setGate("OFF");};
-$("#gOn").onclick=()=>{if(busy)return;setGate("ON");};
+$("#gOff").onclick=()=>{if(busy)return;setGate("OFF");if(LIVEMODE)gatePost("OFF");};
+$("#gOn").onclick=()=>{if(busy)return;setGate("ON");if(LIVEMODE)gatePost("ON");};
 
 /* ---------- SLA ---------- */
 let slaV=0;
@@ -488,11 +492,14 @@ function resetAll(){clearT();busy=false;
  kSet("No resources found.","nginx-r1..r4  1/1 Running","200 OK · 18ms","ok");
  phase("PHASE 0 · IDLE");}
 $("#reset").onclick=()=>{if(busy)return;resetAll();
- phase("PHASE 2 · RESET · cluster healed");toast("kubectl delete networkpolicy --all -A");
+ phase("PHASE 2 · RESET · cluster healed");
+ toast("kubectl delete networkpolicy --all -A");
+ if(LIVEMODE){fetch(API+"/v1/reset",{method:"POST"}).catch(()=>{});}
  at(1500,()=>phase("PHASE 0 · IDLE"));};
 
 $("#inject").onclick=()=>{
  if(busy||!gate)return; busy=true; clearT();
+ if(LIVEMODE){ liveInject(); return; }
  if(gate==="OFF")runBefore(); else runAfter();
 };
 
@@ -538,11 +545,94 @@ $("#slideX").onclick=()=>slide(false);
 $("#scrim").onclick=()=>slide(false);
 addEventListener("keydown",e=>{if(e.key==="Escape")slide(false);});
 
+/* ---------- LIVE mode (real demo API + kubectl); scripted fallback ---- */
+function gatePost(s){fetch(API+"/v1/gate",{method:"POST",
+ headers:{"Content-Type":"application/json"},
+ body:JSON.stringify({state:s})}).catch(()=>{});}
+function caLiveDecision(j){
+ if(j.decision==="BYPASSED"){caBypassed();return;}
+ const rows=[["TS",new Date().toISOString().slice(11,23)],
+  ["GATE",j.gate],["DECISION",j.decision],
+  ["BASE",j.base_decision||"—"],["RULE",j.rule||"—"],
+  ["EXECUTED",String(j.executed)]];
+ const b=$("#cab");b.innerHTML="";
+ rows.forEach(r=>{const d=document.createElement("div");d.className="kv";
+  d.innerHTML=`<span class="k">${r[0]}</span><span class="v">${r[1]}</span>`;
+  b.appendChild(d);});
+ const v=document.createElement("div");
+ v.className="verdict vd-"+(j.decision==="ALLOW"?"ALLOW":
+  (j.decision==="QUARANTINE"?"QUARANTINE":"DENY"));
+ v.textContent="▮ "+j.decision;b.appendChild(v);
+ $("#cafold").textContent=j.explanation||"";}
+let liveIso=false;
+function applyClusterState(cs){
+ const ord=["site-sj-01","site-sj-02","site-oak-01"];
+ if(!cs.any_isolated){fabricGreen();}
+ else cs.sites.forEach(s=>{const i=ord.indexOf(s.name);
+  if(i>=0&&s.network_policies&&s.network_policies.length)siteRed(i);});
+ if(cs.any_isolated&&!liveIso){liveIso=true;slaClimb();}
+ if(!cs.any_isolated&&liveIso){liveIso=false;slaZero();}}
+function liveInject(){
+ phase(gate==="OFF"?"PHASE 1 · BEFORE · gate OFF (LIVE)"
+  :"PHASE 3 · AFTER · gate ON (LIVE)");
+ ltFlag(); if(gate==="OFF")caBypassed();
+ fetch(API+"/v1/inject",{method:"POST"}).then(r=>r.json()).then(j=>{
+  caLiveDecision(j);
+  if(gate==="OFF")at(3200,()=>sub(
+   "site-sj-01 dark · real NetworkPolicy applied · cluster is the witness"));
+  else at(2600,()=>sub("executor never called · site stays green"));
+  at(4200,()=>{busy=false;phase(gate==="OFF"?"PHASE 1 · BEFORE (LIVE)"
+   :"PHASE 4 · PROOF (LIVE) · kubectl get networkpolicy -A");});
+ }).catch(e=>{toast("inject failed — falling back");busy=false;
+  if(gate==="OFF")runBefore();else runAfter();});}
+function liveSSE(){
+ const mk=(p,fn)=>{try{const es=new EventSource(API+p);
+  es.onmessage=ev=>{try{fn(JSON.parse(ev.data));}catch(_){}};
+  es.onerror=()=>{};esList.push(es);}catch(_){}};
+ mk("/v1/cluster-state",applyClusterState);
+ mk("/v1/lobstertrap-events",e=>{const b=$("#ltb");
+  if(b.querySelector("span"))b.innerHTML="";
+  const d=document.createElement("div");d.className="lt";
+  d.innerHTML=`<div class="row"><span>${e.ts||""}</span>
+   <span class="a">${e.action}</span><span>pi=${e.pi}</span>
+   <span>rule=${e.rule}</span><span>intent=${e.intent}</span></div>`;
+  b.appendChild(d);});
+ mk("/v1/audit",e=>{const w=$("#aud");
+  const dec=(e.payload&&(e.payload.decision))||e.kind||"audit";
+  const h=(e.entry_hash||"").replace("sha256:","").slice(0,10);
+  const d=document.createElement("div");d.className="e";
+  d.innerHTML=`${e.audit_id||e.kind} · ${dec} · `+
+   `<span class="h">sha256:${h}…</span>`;
+  w.appendChild(d);});
+ const km={policies:"#kNp",pods:"#kPods",curl:"#kCurl"};
+ Object.keys(km).forEach(c=>mk("/v1/kubectl-stream/"+c,e=>{
+  const el=$(km[c]);if(!el)return;el.textContent=e.line;
+  if(c==="policies")el.className="ln "+(e.line.includes("carapace-isolate")?"np":"");
+  if(c==="curl")el.className="ln "+(e.line.includes("TIMEOUT")?"bad":"ok");}));}
+function liveInit(){
+ const ac=new AbortController();const to=setTimeout(()=>ac.abort(),2500);
+ fetch(API+"/v1/health",{signal:ac.signal}).then(r=>r.json()).then(h=>{
+  clearTimeout(to);if(h.status!=="ok")return;
+  LIVEMODE=true;
+  const real=h.kind_cluster===true;
+  $("#mode").textContent=real?"LIVE · kind + kubectl":"LIVE · SIM executor";
+  $("#mode").style.color=real?"var(--cool)":"var(--warm)";
+  $("#mode").style.borderColor=real?"var(--cool)":"var(--warm)";
+  const c=$("#ltchip");c.textContent=real?"LIVE":"SIM";
+  c.className="chip "+(real?"c-live":"c-sim");
+  document.querySelectorAll(".pane .ph .chip").forEach(x=>{
+   x.textContent=real?"LIVE":"SIM";
+   x.className="chip "+(real?"c-live":"c-sim");});
+  liveSSE();
+  toast("LIVE — Carapace API connected ("+(real?"real cluster":"SIM")+")");
+ }).catch(()=>{clearTimeout(to);/* stay SCRIPTED — no change */});}
+
 /* ---------- boot ---------- */
 $("#bar").innerHTML="<i></i>".repeat(12);
 try{initScene();}catch(e){console.error(e);svgFb();}
 fabricGreen();
 phase("PHASE 0 · IDLE — choose GATE, then INJECT");
+liveInit();
 </script>
 </body>
 </html>

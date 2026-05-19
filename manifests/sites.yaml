@@ -1,0 +1,76 @@
+# Three Veea-style "sites" as namespaces (spec §3.1). Each: 4 nginx pods
+# (replicas), a ClusterIP "spine" service, and a curl-canary that loops
+# reachability probes to the other two spines (the live witness).
+#
+# Applied by demo.sh after Calico is ready. NetworkPolicies are ABSENT by
+# default (all green). carapace/executor_k8s.py applies the deny-all
+# `carapace-isolate` NetworkPolicy at demo time = real total isolation.
+---
+apiVersion: v1
+kind: Namespace
+metadata: { name: site-sj-01, labels: { carapace-site: "true" } }
+---
+apiVersion: v1
+kind: Namespace
+metadata: { name: site-sj-02, labels: { carapace-site: "true" } }
+---
+apiVersion: v1
+kind: Namespace
+metadata: { name: site-oak-01, labels: { carapace-site: "true" } }
+# ---- per-site workloads (templated by demo.sh via `sed SITE=`) ---------
+# demo.sh applies this block once per namespace with $NS substituted.
+# Kept as a single reusable template to avoid 3x duplication.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: nginx, namespace: __NS__ }
+spec:
+  replicas: 4
+  selector: { matchLabels: { app: nginx, site: __NS__ } }
+  template:
+    metadata: { labels: { app: nginx, site: __NS__ } }
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports: [ { containerPort: 80 } ]
+          resources:
+            requests: { cpu: "10m", memory: "16Mi" }
+            limits:   { cpu: "50m", memory: "32Mi" }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: spine, namespace: __NS__ }
+spec:
+  selector: { app: nginx, site: __NS__ }
+  ports: [ { port: 80, targetPort: 80 } ]
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: curl-canary, namespace: __NS__ }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: curl-canary } }
+  template:
+    metadata: { labels: { app: curl-canary } }
+    spec:
+      containers:
+        - name: canary
+          image: curlimages/curl:8.10.1
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              while true; do
+                for s in site-sj-01 site-sj-02 site-oak-01; do
+                  if [ "$s" != "__NS__" ]; then
+                    code=$(curl -s -o /dev/null -m 2 -w '%{http_code}' \
+                      http://spine.$s.svc.cluster.local || echo TIMEOUT)
+                    echo "$(date +%H:%M:%S) __NS__ -> $s : $code"
+                  fi
+                done
+                sleep 1
+              done
+          resources:
+            requests: { cpu: "5m", memory: "8Mi" }
+            limits:   { cpu: "20m", memory: "16Mi" }
