@@ -1,14 +1,14 @@
 {
- "generated_at": "2026-05-19T19:07:35Z",
+ "generated_at": "2026-05-19T19:19:15Z",
  "python": "Python 3.13.3",
  "command": "py -m pytest -v",
  "totals": {
-  "tests": 138,
-  "passed": 135,
+  "tests": 141,
+  "passed": 138,
   "failed": 0,
   "errors": 0,
   "skipped": 3,
-  "duration_s": 0.858
+  "duration_s": 0.905
  },
  "suites": [
   {
@@ -47,6 +47,13 @@
    "skipped": 0
   },
   {
+   "file": "test_demo_api",
+   "tests": 9,
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
    "file": "test_agent",
    "tests": 8,
    "passed": 8,
@@ -76,13 +83,6 @@
   },
   {
    "file": "test_audit",
-   "tests": 6,
-   "passed": 6,
-   "failed": 0,
-   "skipped": 0
-  },
-  {
-   "file": "test_demo_api",
    "tests": 6,
    "passed": 6,
    "failed": 0,

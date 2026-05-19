@@ -59,6 +59,79 @@ class GateBody(BaseModel):
     state: str  # "OFF" | "ON"
 
 
+class ChatBody(BaseModel):
+    message: str = ""
+    image: str | None = None        # optional base64 (data: prefix ok)
+
+
+# Grounding context + offline knowledge base for the help chatbot. The KB
+# answers the pinned/common questions deterministically with no backend
+# (honest, like the rest of the demo); Gemini is used for free-form or
+# image questions only when a key is configured.
+CARAPACE_CTX = (
+    "Carapace is the action-layer trust gate that sits on top of Veea's "
+    "Lobster Trap. Lobster Trap (real MIT Go binary) guards the "
+    "conversation; Carapace guards the action the agent is about to take. "
+    "It scores declared-vs-detected intent, source provenance (min-trust, "
+    "fail-closed), and blast radius, folds Lobster Trap's verdict in "
+    "monotonically (can only tighten), then applies pure rule matrix "
+    "R1-R9 and issues a single-use 5s execution token; no token, no "
+    "kubectl. Real Kubernetes (kind+Calico) is exercised in CI. Gemini "
+    "(gemini-flash-latest) drives the agent and the multimodal path "
+    "(Scenario E: an injection inside a screenshot — Lobster Trap's text "
+    "DPI is blind to pixels, Carapace catches it). Honesty: the booth "
+    "pages are a verified replay for reliability; the real binary, real "
+    "Gemini, and real K8s-in-CI are genuine and disclosed, never faked."
+)
+_KB = [
+    (("what is", "carapace", "about", "overview", "tldr"),
+     "Carapace is the action-layer trust gate on top of Veea's Lobster "
+     "Trap. Lobster Trap guards the conversation; Carapace guards the "
+     "action — gating intent vs. provenance vs. blast radius and issuing "
+     "a single-use token before anything executes."),
+    (("different", "vs lobster", "difference", "versus"),
+     "Lobster Trap inspects prompts/responses (conversation layer). "
+     "Carapace inspects the action itself — what it does, what data "
+     "justified it, how big the blast radius is. Composition is monotone: "
+     "Lobster Trap can only make Carapace stricter, never looser."),
+    (("real", "scripted", "mock", "fake", "honest"),
+     "Real: the Veea Lobster Trap binary (built from MIT source, run "
+     "live), Gemini (live), and Kubernetes (kind+Calico in CI). The booth "
+     "pages run a verified replay for reliability — stated openly on the "
+     "About → Status table. Nothing is dressed up as live."),
+    (("rule", "matrix", "r1", "r9", "decide", "decision"),
+     "Rules R1-R9, first match wins, pure & deterministic. e.g. R1 "
+     "declared≠detected→DENY, R2 injection-tainted+remediation→DENY "
+     "(→QUARANTINE if Lobster Trap corroborates), R4 site/region blast→"
+     "HUMAN_REVIEW, R9 default→DENY (fail-closed)."),
+    (("kubernetes", "k8s", "kind", "calico", "cluster", "networkpolicy"),
+     "The executor runs real kubectl: a deny-all NetworkPolicy = total "
+     "site isolation, token-gated. A kind+Calico cluster in GitHub "
+     "Actions asserts it actually severs cross-site traffic and heals."),
+    (("multimodal", "image", "screenshot", "scenario e", "vision", "gemini"),
+     "Scenario E: an injection painted into a screenshot is opaque pixels "
+     "to Lobster Trap's text DPI, so it passes the conversation layer. "
+     "Gemini vision OCRs it; Carapace tags the source untrusted + "
+     "injection-suspected (trust is source-bound — Gemini can't raise "
+     "it); R2 DENIES. Carapace catches what the text layer couldn't."),
+    (("sponsor", "veea", "google", "gemini api", "use of"),
+     "Veea: built & run the real Lobster Trap binary, forked its policy, "
+     "consume its _lobstertrap contract. Google: Gemini drives the agent "
+     "and the multimodal ingest via the OpenAI-compat endpoint, routed "
+     "through the real Lobster Trap proxy."),
+]
+
+
+def _kb_answer(q: str) -> str | None:
+    ql = q.lower()
+    best, score = None, 0
+    for kws, ans in _KB:
+        s = sum(1 for k in kws if k in ql)
+        if s > score:
+            best, score = ans, s
+    return best if score else None
+
+
 def _envelope() -> IntentEnvelope:
     return IntentEnvelope(
         intent=IntentClass.REMEDIATE_DESTRUCTIVE,
@@ -198,6 +271,58 @@ def create_app() -> FastAPI:
                 yield f"data: {json.dumps({'cmd': cmd, 'line': line})}\n\n"
                 await asyncio.sleep(1)
         return _sse(g())
+
+    @app.post("/v1/chat")
+    def chat(b: ChatBody):
+        msg = (b.message or "").strip()
+        if not msg and not b.image:
+            raise HTTPException(400, "message or image required")
+
+        # Try live Gemini (multimodal) through the proxy if a key exists.
+        try:
+            import httpx
+
+            from .agent import AgentConfig
+            cfg = AgentConfig.from_env()
+            content = [{"type": "text", "text": msg or
+                        "What does this image show? Relate it to Carapace."}]
+            if b.image:
+                url = (b.image if b.image.startswith("data:")
+                       else f"data:image/png;base64,{b.image}")
+                content.append({"type": "image_url",
+                                 "image_url": {"url": url}})
+            body = {"model": cfg.model, "temperature": 0.2, "messages": [
+                {"role": "system", "content":
+                 "You are Carapace's help assistant. Answer ONLY about "
+                 "this project, concisely (<=110 words), using the "
+                 "context. Be honest: the booth pages are a verified "
+                 "replay; the real Lobster Trap binary, real Gemini, and "
+                 "real Kubernetes-in-CI are genuine. If unsure, say so "
+                 "and point to the About page.\n\nCONTEXT: " + CARAPACE_CTX},
+                {"role": "user", "content": content}]}
+            r = httpx.post(cfg.base_url.rstrip("/") + "/chat/completions",
+                           headers={"Authorization": f"Bearer {cfg.api_key}",
+                                    "Content-Type": "application/json",
+                                    "Accept-Encoding": "identity"},
+                           json=body, timeout=cfg.timeout)
+            j = r.json()
+            ans = (j.get("choices") or [{}])[0].get(
+                "message", {}).get("content", "").strip()
+            if ans:
+                return {"answer": ans, "source": "gemini",
+                        "used_image": bool(b.image)}
+        except Exception:
+            pass  # fall through to the offline KB — never 500
+
+        kb = _kb_answer(msg)
+        if kb:
+            return {"answer": kb, "source": "kb", "used_image": False}
+        note = ("Live Gemini multimodal needs the running backend "
+                "(demo.sh / a GEMINI_API_KEY). " if b.image else "")
+        return {"answer": note + "Try a pinned question, or see the "
+                "About page for the full architecture, rule matrix, "
+                "Kubernetes use, and the honest status table.",
+                "source": "kb", "used_image": False}
 
     return app
 

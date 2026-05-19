@@ -56,3 +56,24 @@ def test_reset_clears_gate(monkeypatch):
 def test_bad_gate_value_rejected(monkeypatch):
     c = _client(monkeypatch)
     assert c.post("/v1/gate", json={"state": "MAYBE"}).status_code == 400
+
+
+def test_chat_pinned_question_answered_offline(monkeypatch):
+    # No GEMINI_API_KEY in test env -> Gemini path raises -> KB fallback.
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    c = _client(monkeypatch)
+    j = c.post("/v1/chat", json={"message": "what is carapace?"}).json()
+    assert j["source"] == "kb"
+    assert "action-layer" in j["answer"].lower()
+
+
+def test_chat_unknown_falls_back_to_about(monkeypatch):
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    c = _client(monkeypatch)
+    j = c.post("/v1/chat", json={"message": "zxqw unrelated nonsense"}).json()
+    assert j["source"] == "kb" and "About page" in j["answer"]
+
+
+def test_chat_requires_message_or_image(monkeypatch):
+    c = _client(monkeypatch)
+    assert c.post("/v1/chat", json={}).status_code == 400

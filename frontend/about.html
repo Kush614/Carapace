@@ -334,5 +334,152 @@ enterprise-security project, not a caveat to hide.</p></div>
 </div>
 
 </div>
+
+<style>
+#cbtn{position:fixed;right:22px;bottom:22px;z-index:60;background:var(--acid);
+ color:var(--acid-ink);border:none;font-family:var(--fd);font-size:13px;
+ letter-spacing:.06em;padding:13px 18px;cursor:pointer;
+ box-shadow:5px 5px 0 0 #000}
+#cbtn:hover{transform:translate(-2px,-2px)}
+#cpanel{position:fixed;right:22px;bottom:74px;z-index:60;width:380px;
+ max-width:calc(100vw - 44px);height:520px;max-height:calc(100vh - 110px);
+ background:var(--bg-1);border:1px solid var(--ink-line);display:flex;
+ flex-direction:column}
+#cpanel[hidden]{display:none}
+#cpanel .ch{display:flex;justify-content:space-between;align-items:center;
+ padding:12px 14px;border-bottom:1px solid var(--ink-line);
+ font-family:var(--fd);font-size:12px;letter-spacing:.08em;color:var(--acid)}
+#cpanel .ch button{background:none;border:none;color:var(--ink-1);
+ font-size:16px;cursor:pointer}
+#cmsgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;
+ gap:10px;font-size:13.5px}
+#cmsgs .u,#cmsgs .b{padding:9px 12px;max-width:88%;line-height:1.5}
+#cmsgs .u{align-self:flex-end;background:var(--bg-2);border:1px solid var(--ink-line)}
+#cmsgs .b{align-self:flex-start;background:var(--bg-inset);
+ border-left:2px solid var(--acid);color:var(--ink-1)}
+#cmsgs .src{font-family:var(--fm);font-size:10px;color:var(--ink-2);
+ margin-top:5px}
+#cmsgs img{max-width:130px;border:1px solid var(--ink-line);margin-top:6px}
+.cpins{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;
+ border-top:1px solid var(--ink-line)}
+.cpins button{background:transparent;border:1px solid var(--ink-line);
+ color:var(--ink-1);font-size:11px;padding:5px 9px;cursor:pointer}
+.cpins button:hover{border-color:var(--acid);color:var(--acid)}
+#cform{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--ink-line)}
+#cform input[type=text]{flex:1;background:var(--bg-inset);
+ border:1px solid var(--ink-line);color:var(--ink-0);padding:9px 10px;
+ font-family:var(--fb);font-size:13px}
+#cform button,#cimgl{background:var(--bg-2);border:1px solid var(--ink-line);
+ color:var(--ink-0);padding:8px 12px;cursor:pointer;font-size:13px}
+#cform button[type=submit]{background:var(--acid);color:var(--acid-ink);
+ border-color:var(--acid);font-family:var(--fd);font-size:12px}
+#cimgprev{padding:0 12px 8px;font-size:11px;color:var(--cool)}
+</style>
+
+<button id="cbtn">✦ Ask Carapace</button>
+<div id="cpanel" hidden>
+  <div class="ch"><span>CARAPACE ASSISTANT · multimodal</span>
+    <button id="cx" aria-label="close">✕</button></div>
+  <div id="cmsgs"></div>
+  <div class="cpins" id="cpins"></div>
+  <div id="cimgprev"></div>
+  <form id="cform">
+    <label id="cimgl" title="attach an image (e.g. a poisoned screenshot)">🖼
+      <input id="cimg" type="file" accept="image/*" hidden></label>
+    <input id="cin" type="text" placeholder="Ask about Carapace…"
+      autocomplete="off">
+    <button type="submit">Send</button>
+  </form>
+</div>
+<script>
+(function(){
+ var API=(location.protocol==="file:"?"http://localhost:8000":
+  (localStorage.getItem("carapace_api")||"http://localhost:8000"));
+ var KB=[
+  [["what is","carapace","about","overview","tldr"],
+   "Carapace is the action-layer trust gate on top of Veea's Lobster Trap. "+
+   "Lobster Trap guards the conversation; Carapace guards the action — "+
+   "gating intent vs. provenance vs. blast radius and issuing a single-use "+
+   "token before anything executes."],
+  [["different","vs lobster","difference","versus"],
+   "Lobster Trap inspects prompts/responses. Carapace inspects the action "+
+   "itself. Composition is monotone: Lobster Trap can only make Carapace "+
+   "stricter, never looser."],
+  [["real","scripted","mock","fake","honest"],
+   "Real: the Veea Lobster Trap binary, Gemini (live), and Kubernetes "+
+   "(kind+Calico in CI). The booth pages run a verified replay for "+
+   "reliability — stated openly on the Status table above. Nothing is "+
+   "dressed up as live."],
+  [["rule","matrix","r1","r9","decide","decision"],
+   "Rules R1-R9, first match wins, pure & deterministic. R1 declared≠"+
+   "detected→DENY, R2 injection+remediation→DENY (→QUARANTINE if Lobster "+
+   "Trap corroborates), R4 site/region→HUMAN_REVIEW, R9 default→DENY."],
+  [["kubernetes","k8s","kind","calico","cluster","networkpolicy"],
+   "The executor runs real kubectl: a deny-all NetworkPolicy = total site "+
+   "isolation, token-gated. kind+Calico in GitHub Actions asserts it "+
+   "actually severs traffic and heals."],
+  [["multimodal","image","screenshot","scenario e","vision","gemini"],
+   "Scenario E: an injection inside a screenshot is opaque pixels to "+
+   "Lobster Trap's text DPI, so it passes the conversation layer. Gemini "+
+   "vision OCRs it; Carapace tags the source untrusted+injected (trust is "+
+   "source-bound — Gemini can't raise it); R2 DENIES."],
+  [["sponsor","veea","google","use of"],
+   "Veea: built & run the real Lobster Trap binary, forked its policy, "+
+   "consume its _lobstertrap contract. Google: Gemini drives the agent "+
+   "and the multimodal ingest via the OpenAI-compat endpoint, through "+
+   "the real Lobster Trap proxy."]];
+ var PINS=[["What is Carapace?","what is carapace"],
+  ["vs Lobster Trap?","how is this different from lobster trap"],
+  ["Real or scripted?","what is real vs scripted, be honest"],
+  ["Rule matrix?","how does the rule matrix work"],
+  ["Kubernetes?","how is kubernetes used"],
+  ["Scenario E (multimodal)?","explain scenario e multimodal"],
+  ["Sponsor use?","how did you use the sponsors veea and google"]];
+ var $=function(s){return document.querySelector(s);};
+ var msgs=$("#cmsgs"),pins=$("#cpins"),imgData=null;
+ function kb(q){q=q.toLowerCase();var best=null,sc=0;
+  KB.forEach(function(e){var s=e[0].reduce(function(a,k){
+   return a+(q.indexOf(k)>=0?1:0);},0);if(s>sc){sc=s;best=e[1];}});
+  return sc?best:null;}
+ function add(cls,html){var d=document.createElement("div");d.className=cls;
+  d.innerHTML=html;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d;}
+ function esc(t){return (t||"").replace(/[&<>]/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
+ function send(text){
+  var img=imgData;
+  add("u",esc(text)+(img?'<br><img src="'+img+'">':""));
+  imgData=null;$("#cimgprev").textContent="";
+  var wait=add("b","…");
+  var ctl=new AbortController();var to=setTimeout(function(){ctl.abort();},3500);
+  fetch(API+"/v1/chat",{method:"POST",headers:{"Content-Type":"application/json"},
+   signal:ctl.signal,body:JSON.stringify({message:text,image:img})})
+   .then(function(r){return r.json();}).then(function(j){clearTimeout(to);
+    wait.innerHTML=esc(j.answer)+'<div class="src">'+
+     (j.source==="gemini"?"live · gemini":"knowledge base")+'</div>';})
+   .catch(function(){clearTimeout(to);
+    var a=kb(text);
+    if(!a)a=(img?"Live Gemini multimodal needs the running backend "+
+      "(demo.sh / a key). ":"")+"Try a pinned question, or read the "+
+      "sections above — architecture, rule matrix, Kubernetes, and the "+
+      "honest Status table.";
+    wait.innerHTML=esc(a)+'<div class="src">knowledge base (offline)</div>';});}
+ PINS.forEach(function(p){var b=document.createElement("button");
+  b.textContent=p[0];b.onclick=function(){send(p[1]);};pins.appendChild(b);});
+ $("#cbtn").onclick=function(){var p=$("#cpanel");
+  p.hidden=!p.hidden;if(!p.hidden&&!msgs.children.length)
+   add("b","Hi — I'm the Carapace assistant. Pick a question below, ask "+
+    "your own, or attach a screenshot. (Pinned answers work offline; "+
+    "free-form & image use live Gemini when the backend is up.)"+
+    '<div class="src">honest: booth pages are a verified replay</div>');};
+ $("#cx").onclick=function(){$("#cpanel").hidden=true;};
+ $("#cimg").onchange=function(e){var f=e.target.files[0];if(!f)return;
+  var r=new FileReader();r.onload=function(){imgData=r.result;
+   $("#cimgprev").textContent="🖼 attached: "+f.name+" (sent with next message)";};
+  r.readAsDataURL(f);};
+ $("#cform").onsubmit=function(e){e.preventDefault();
+  var v=$("#cin").value.trim();if(!v&&!imgData)return;
+  $("#cin").value="";send(v||"What does this image show, in Carapace terms?");};
+})();
+</script>
 </body>
 </html>
