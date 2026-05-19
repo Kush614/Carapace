@@ -1,0 +1,7 @@
+# Core engine (spec §6, §7.6) has ZERO runtime dependencies — by design.
+# Test runner only:
+pytest>=8
+
+# Layered on later (see pyproject optional-deps):
+#   api  : fastapi, uvicorn, pydantic   -> POST /v1/check, /v1/execute
+#   agent: google-genai                 -> Gemini 2.5 Flash IntentEnvelopes

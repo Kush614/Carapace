@@ -1,0 +1,134 @@
+# Carapace policy pack — ACTION LAYER
+# =====================================================================
+# This is the declarative, human-readable form of Carapace's rule
+# matrix (spec §6.1), written in the *same first-match-wins, priority +
+# conditions + action* shape as a Lobster Trap policy — but the fields
+# it matches on are action-layer facts Lobster Trap cannot see:
+#
+#   detected_intent       — what the *tool* actually does (not declared)
+#   declared_intent       — what the agent's IntentEnvelope claimed
+#   effective_provenance  — min trust across cited sources (post-fold)
+#   blast_radius          — infra impact of the tool + its arguments
+#   injection_flag        — any cited source tainted (incl. Lobster Trap)
+#
+# The pure engine (carapace/decision_engine.py) is the source of truth;
+# tests/test_policy.py asserts THIS FILE stays byte-for-byte in sync
+# with it (same rule ids, same actions, same order). It is policy-as-
+# code, not documentation that rots.
+#
+# Composition: a DENY from R2 is escalated to QUARANTINE when the Veea
+# Lobster Trap conversation layer independently flagged the same turn
+# (defense in depth). See `compose:` on R2.
+
+version: "1.0"
+policy_name: "carapace-action-matrix"
+ruleset_version: "rs-2026-05-18-a"
+default_action: DENY              # R9 — fail-closed
+
+action_rules:
+  - id: R1
+    name: intent_violation
+    priority: 100
+    action: DENY
+    description: "Declared intent does not match the tool's detected intent
+      (scope creep / confused deputy)."
+    conditions:
+      - field: detected_intent
+        op: not_equals
+        value: declared_intent
+
+  - id: R2
+    name: injection_tainted_remediation
+    priority: 95
+    action: DENY
+    compose:
+      when: lobstertrap_corroborates_injection
+      escalate_to: QUARANTINE
+    description: "An injection-suspected source — including any turn Lobster
+      Trap flagged at the conversation layer — drives a remediation."
+    conditions:
+      - field: injection_flag
+        op: equals
+        value: true
+      - field: detected_intent
+        op: in
+        value: [remediate_reversible, remediate_destructive]
+
+  - id: R3
+    name: untrusted_destructive
+    priority: 90
+    action: DENY
+    description: "Untrusted provenance can never authorise a destructive action."
+    conditions:
+      - field: effective_provenance
+        op: equals
+        value: untrusted
+      - field: detected_intent
+        op: equals
+        value: remediate_destructive
+
+  - id: R4
+    name: site_region_blast
+    priority: 80
+    action: HUMAN_REVIEW
+    description: "Site/region blast radius always needs a human, any intent."
+    conditions:
+      - field: blast_radius
+        op: in
+        value: [site, region]
+
+  - id: R5
+    name: destructive_vlan_node
+    priority: 70
+    action: HUMAN_REVIEW
+    description: "Destructive action at vlan/node scope needs a human."
+    conditions:
+      - field: detected_intent
+        op: equals
+        value: remediate_destructive
+      - field: blast_radius
+        op: in
+        value: [vlan, node]
+
+  - id: R6
+    name: semitrusted_destructive
+    priority: 60
+    action: HUMAN_REVIEW
+    description: "Destructive action justified only by semi-trusted context."
+    conditions:
+      - field: effective_provenance
+        op: equals
+        value: semi_trusted
+      - field: detected_intent
+        op: equals
+        value: remediate_destructive
+
+  - id: R7
+    name: reversible_trusted
+    priority: 50
+    action: ALLOW
+    description: "Reversible remediation backed by ≥ semi-trusted context."
+    conditions:
+      - field: detected_intent
+        op: equals
+        value: remediate_reversible
+      - field: effective_provenance
+        op: not_equals
+        value: untrusted
+
+  - id: R8
+    name: read_only_or_advisory
+    priority: 40
+    action: ALLOW
+    description: "Read-only / advisory actions are always allowed."
+    conditions:
+      - field: detected_intent
+        op: in
+        value: [observe, recommend]
+
+  - id: R9
+    name: fail_closed_default
+    priority: 0
+    action: DENY
+    description: "Anything not explicitly allowed is denied."
+    conditions: []
