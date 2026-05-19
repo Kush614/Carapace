@@ -524,9 +524,20 @@ function initScene(){
   const cam=new THREE.PerspectiveCamera(42,1,0.1,100);
   const camBase=new THREE.Vector3(11,7.5,15);
   cam.position.copy(camBase);cam.lookAt(0,0,-1);
-  function size(){const w=wrap.clientWidth,h=wrap.clientHeight;
-    rn.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();}
+  function size(){
+    const w=wrap.clientWidth,h=wrap.clientHeight;
+    if(w<2||h<2)return;                       // ignore stale/zero layout
+    rn.setPixelRatio(Math.min(2,devicePixelRatio));
+    rn.setSize(w,h,false);                    // buffer = CSS px * DPR (sharp)
+    cam.aspect=w/h;cam.updateProjectionMatrix();
+  }
   addEventListener("resize",size);
+  // Re-size to the REAL box whenever flex/layout/fonts settle — this is
+  // what fixes the blur (init ran before the responsive layout resolved).
+  if(window.ResizeObserver) new ResizeObserver(size).observe(wrap);
+  addEventListener("load",size);
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(size);
+  requestAnimationFrame(()=>requestAnimationFrame(size));
   sc.add(new THREE.AmbientLight(0xffffff,.9));
   const INK=0xF5F1E8,DIM=0x6E6A60,ACID=0xD8FF3E,HOT=0xFF3B3B,
     VIO=0xB69CFF,WARM=0xFFB020;
