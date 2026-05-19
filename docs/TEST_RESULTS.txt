@@ -1,5 +1,5 @@
-Carapace test suite — real run
-generated: 2026-05-19 15:52:23Z
+Carapace test suite - real run
+generated: 2026-05-19 19:07:20Z
 python:   Python 3.13.3
 command:  py -m pytest -v
 ================================================================
@@ -10,22 +10,24 @@ configfile: pyproject.toml
 testpaths: tests
 plugins: anyio-4.11.0, opik-1.10.42, asyncio-1.3.0
 asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collected 128 items
+collected 138 items
 
-tests\test_agent.py ........                                             [  6%]
-tests\test_api.py .......                                                [ 11%]
-tests\test_audit.py ......                                               [ 16%]
-tests\test_blast_radius.py .............                                 [ 26%]
-tests\test_decision_engine.py ...............                            [ 38%]
-tests\test_demo_api.py ......                                            [ 42%]
-tests\test_executor_k8s.py ........                                      [ 49%]
-tests\test_intent_classifier.py ..............                           [ 60%]
-tests\test_lobstertrap.py ...................                            [ 75%]
-tests\test_lt_shim.py ...........                                        [ 83%]
-tests\test_policy.py ......                                              [ 88%]
+tests\test_agent.py ........                                             [  5%]
+tests\test_api.py .......                                                [ 10%]
+tests\test_audit.py ......                                               [ 15%]
+tests\test_blast_radius.py .............                                 [ 24%]
+tests\test_decision_engine.py ...............                            [ 35%]
+tests\test_demo_api.py ......                                            [ 39%]
+tests\test_executor_k8s.py ........                                      [ 45%]
+tests\test_intent_classifier.py ..............                           [ 55%]
+tests\test_k8s_integration.py ss                                         [ 57%]
+tests\test_lobstertrap.py ...................                            [ 71%]
+tests\test_lt_shim.py ...........                                        [ 78%]
+tests\test_multimodal.py .......s                                        [ 84%]
+tests\test_policy.py ......                                              [ 89%]
 tests\test_provenance.py .....                                           [ 92%]
-tests\test_scenarios.py ......                                           [ 96%]
+tests\test_scenarios.py ......                                           [ 97%]
 tests\test_types.py ....                                                 [100%]
 
 ------------ generated xml file: E:\carapace\docs\test-results.xml ------------
-============================= 128 passed in 0.81s =============================
+======================= 135 passed, 3 skipped in 0.86s ========================

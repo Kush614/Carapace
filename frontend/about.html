@@ -258,6 +258,12 @@ spec:
   <div class="card"><h4>Indirect prompt-injection defense</h4><p>Poisoned
   logs, tickets, SNMP traps, emails. Carapace blocks the <i>action</i>
   even when the conversation looked benign.</p></div>
+  <div class="card"><h4>Multimodal injection — Scenario E</h4><p>An
+  injection painted into a <i>screenshot</i> is opaque pixels to Lobster
+  Trap's text DPI — it passes the conversation layer. Gemini vision OCRs
+  it; <code>carapace.multimodal.ingest</code> tags the source untrusted +
+  injection-suspected (trust is source-bound — Gemini cannot raise it);
+  R2 DENIES. Carapace catches what the text layer never could.</p></div>
   <div class="card"><h4>Confused-deputy / scope creep</h4><p>Agent
   declares "observe" but calls a destructive tool → R1 intent-violation
   DENY. Declared-vs-detected is enforced at the action layer.</p></div>

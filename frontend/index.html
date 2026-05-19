@@ -403,8 +403,15 @@ const SC={
    tool:"isolate_network_device(spine-switch-sj-02)",declared:"remediate_destructive",
    detected:"remediate_destructive",prov:"trusted",provsrc:"telemetry:net.spine.sj-02",
    blast:"site",injection:false,lt:"ALLOW · risk 0.05",rule:"R4",
-   note:"site blast radius → human gate",cost:47000}};
-const ORDER=["A","B","C","D"];
+   note:"site blast radius → human gate",cost:47000},
+ E:{key:"E",title:"POISONED SCREENSHOT",verdict:"DENY",
+   tool:"network.isolate(spine-switch-sj-01)",declared:"remediate_destructive",
+   detected:"remediate_destructive",prov:"untrusted",
+   provsrc:"screenshot:syslog-grab.png",blast:"site",injection:true,
+   lt:"PASS · blind to pixels",rule:"R2 (multimodal — Gemini read the image)",
+   note:"LT text-DPI is blind to pixels; Gemini OCR'd the injection; "+
+     "Carapace tagged the source untrusted+injected → DENY",cost:0}};
+const ORDER=["A","B","C","D","E"];
 const GLYPH={ALLOW:"✓",DENY:"▲",HUMAN_REVIEW:"◆",QUARANTINE:"▮",OUTAGE:"▲"};
 
 // ---- helpers -----------------------------------------------------------
@@ -642,6 +649,7 @@ async function run(k){
   if(k==="B") return runB(s);
   if(k==="C") return runC(s);
   if(k==="D") return runD(s);
+  if(k==="E") return runE(s);
 }
 function done(s,extraAudit){
   traceRun(s);
@@ -698,6 +706,24 @@ function runD(s){
   at(4000,()=>{$("#reviewDesc").textContent=
     `${s.tool} · blast=${s.blast} · provenance=${s.prov} · rule R4`;
     $("#review").classList.add("show");});
+}
+function runE(s){
+  $("#atk").classList.add("show");
+  at(1200,()=>{pktColor(S.INK);movePkt(0,1,1000);});      // agent -> LT
+  at(1300,()=>lite(1,S.ACID));                            // LT blind: PASSES
+  at(2300,()=>movePkt(1,2,1000));                         // LT -> Carapace
+  at(3000,()=>traceRun(s));
+  at(3400,()=>{lite(2,S.HOT);                             // Carapace catches it
+    if(S.pkt){S.pkt.visible=true;S.pkt.position.set(2.0,1.4,0);
+      pktColor(S.HOT);}});
+  at(4200,()=>slaFlashZero());
+  at(5000,async()=>{
+    await auditPush("lt",{...s,verdict:"PASS",rule:"blind (text-DPI)"});
+    await auditPush("cp",s);});
+  at(5800,()=>{$("#snote").textContent=
+    "Lobster Trap blind to pixels · Carapace DENY · executor never called";
+    $("#snote").classList.add("show");running=false;
+    $("#rec").classList.remove("live");});
 }
 $("#approve").onclick=async()=>{
   if(!$("#review").classList.contains("show"))return;

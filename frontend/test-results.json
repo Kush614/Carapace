@@ -1,14 +1,14 @@
 {
- "generated_at": "2026-05-19T15:52:56Z",
+ "generated_at": "2026-05-19T19:07:35Z",
  "python": "Python 3.13.3",
  "command": "py -m pytest -v",
  "totals": {
-  "tests": 128,
-  "passed": 128,
+  "tests": 138,
+  "passed": 135,
   "failed": 0,
   "errors": 0,
-  "skipped": 0,
-  "duration_s": 0.808
+  "skipped": 3,
+  "duration_s": 0.858
  },
  "suites": [
   {
@@ -61,6 +61,13 @@
    "skipped": 0
   },
   {
+   "file": "test_multimodal",
+   "tests": 8,
+   "passed": 7,
+   "failed": 0,
+   "skipped": 1
+  },
+  {
    "file": "test_api",
    "tests": 7,
    "passed": 7,
@@ -108,6 +115,13 @@
    "passed": 4,
    "failed": 0,
    "skipped": 0
+  },
+  {
+   "file": "test_k8s_integration",
+   "tests": 2,
+   "passed": 0,
+   "failed": 0,
+   "skipped": 2
   }
  ],
  "source": "https://github.com/Kush614/Carapace/blob/main/docs/test-results.xml"

@@ -7,7 +7,7 @@
 **Tracks:** Veea — *Lobster Trap* (build on top of it) · Google DeepMind — *Gemini / AI Studio*
 
 🔴 **Live demo:** https://frontend-one-sigma-10.vercel.app
-🧪 **128 tests, 0 failures** — real run committed: [`docs/TEST_RESULTS.txt`](docs/TEST_RESULTS.txt) · [`docs/test-results.xml`](docs/test-results.xml) (JUnit) · ✅ proven live end-to-end (real Gemini → real Lobster Trap → Carapace)
+🧪 **138 tests · 135 passed · 0 failed · 3 skipped** (the 3 are live-gated: real-cluster + live-Gemini-vision) — real run committed: [`docs/TEST_RESULTS.txt`](docs/TEST_RESULTS.txt) · [`docs/test-results.xml`](docs/test-results.xml) (JUnit) · ✅ proven live end-to-end (real Gemini → real Lobster Trap → Carapace)
 
 [![real-k8s](https://github.com/Kush614/Carapace/actions/workflows/real-k8s.yml/badge.svg)](https://github.com/Kush614/Carapace/actions/workflows/real-k8s.yml)
 ☸️ **Real-cluster proof runs in CI** — every push spins a real `kind`
@@ -131,7 +131,7 @@ citation, or empty justification fails closed.
 **Offline demo (no key, deterministic, bulletproof):**
 ```powershell
 py demo\run_demo.py            # Scenarios A-D
-py -m pytest                   # 128 passed (see Test evidence below)
+py -m pytest                   # 135 passed, 3 skipped (Test evidence below)
 ```
 
 **Live stack (real Gemini through the real binary):**
@@ -163,25 +163,31 @@ the live site. Regenerate any time:
 py -m pytest -v --junit-xml=docs/test-results.xml | Tee-Object docs/TEST_RESULTS.txt
 ```
 
-**Latest run — 128 passed, 0 failed, 0 errors, 0 skipped (0.81s):**
+**Latest run — 135 passed, 0 failed, 0 errors, 3 skipped (0.86s).** The 3
+skipped are the *live-gated* tests that need real infra/keys and run only
+where available: `test_k8s_integration.py` (×2, real kind cluster, runs
+in CI) and the live Gemini-vision case in `test_multimodal.py` (×1). They
+are skipped — never silently passed — so the count stays honest.
 
-| Test file | Tests | Passed |
-|---|--:|--:|
-| `tests/test_lobstertrap.py` | 19 | 19 |
-| `tests/test_decision_engine.py` | 15 | 15 |
-| `tests/test_intent_classifier.py` | 14 | 14 |
-| `tests/test_blast_radius.py` | 13 | 13 |
-| `tests/test_lt_shim.py` | 11 | 11 |
-| `tests/test_agent.py` | 8 | 8 |
-| `tests/test_executor_k8s.py` | 8 | 8 |
-| `tests/test_api.py` | 7 | 7 |
-| `tests/test_audit.py` | 6 | 6 |
-| `tests/test_demo_api.py` | 6 | 6 |
-| `tests/test_policy.py` | 6 | 6 |
-| `tests/test_scenarios.py` | 6 | 6 |
-| `tests/test_provenance.py` | 5 | 5 |
-| `tests/test_types.py` | 4 | 4 |
-| **TOTAL** | **128** | **128** |
+| Test file | Tests | Passed | Skipped |
+|---|--:|--:|--:|
+| `tests/test_lobstertrap.py` | 19 | 19 | 0 |
+| `tests/test_decision_engine.py` | 15 | 15 | 0 |
+| `tests/test_intent_classifier.py` | 14 | 14 | 0 |
+| `tests/test_blast_radius.py` | 13 | 13 | 0 |
+| `tests/test_lt_shim.py` | 11 | 11 | 0 |
+| `tests/test_agent.py` | 8 | 8 | 0 |
+| `tests/test_executor_k8s.py` | 8 | 8 | 0 |
+| `tests/test_multimodal.py` | 8 | 7 | 1 |
+| `tests/test_api.py` | 7 | 7 | 0 |
+| `tests/test_audit.py` | 6 | 6 | 0 |
+| `tests/test_demo_api.py` | 6 | 6 | 0 |
+| `tests/test_policy.py` | 6 | 6 | 0 |
+| `tests/test_scenarios.py` | 6 | 6 | 0 |
+| `tests/test_provenance.py` | 5 | 5 | 0 |
+| `tests/test_types.py` | 4 | 4 | 0 |
+| `tests/test_k8s_integration.py` | 2 | 0 | 2 |
+| **TOTAL** | **138** | **135** | **3** |
 
 Coverage spans the pure engine (R1–R9), Lobster Trap composition + monotone
 fold, audit hash-chain tamper-detection, the FastAPI gate, the policy pack,
@@ -209,7 +215,7 @@ the Gemini agent, the wire-compatible shim, and the real K8s executor
 | Policy | YAML, two-layer (conversation + action), drift-verified vs engine |
 | Frontend | Single-file HTML + Three.js (self-hosted) — Gumroad neo-brutalist 3D |
 | Deploy | Vercel (static) |
-| Tests | pytest — **128, 0 failures** (real run in `docs/`; engine · composition · audit · API · policy · agent · shim · K8s executor · demo-API) |
+| Tests | pytest — **138: 135 passed, 0 failed, 3 live-gated skipped** (real run in `docs/`; engine · composition · audit · API · policy · agent · shim · K8s executor · demo-API · multimodal) |
 
 ## 9. Repo layout
 
@@ -229,7 +235,7 @@ configs/              two-layer policy pack (LT fork + action matrix)
 demo/                 run_demo.py (offline A-D) · run_live.py (full live)
 frontend/             index.html (3D UI) + self-hosted Three.js + vercel.json
 bin/lobstertrap.exe   the REAL Veea binary, built here from MIT source
-tests/                128 tests (real results in docs/TEST_RESULTS.txt)
+tests/                138 tests · 135 pass · 3 live-gated (docs/TEST_RESULTS.txt)
 ```
 
 ## 10. Audit a regulator could read
