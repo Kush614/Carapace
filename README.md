@@ -3,6 +3,15 @@
 > **The action-layer trust boundary that sits on top of Veea's Lobster Trap.**
 > Lobster Trap guards the *conversation*. Carapace guards the *action*.
 
+🧒 **Explain like I'm 5:** Imagine a robot helper that can flip real switches
+in a power station. One day someone slips a fake note into the robot's mailbox
+that says *"turn everything off!"* — and the robot almost believes it. Carapace
+is the careful grown-up standing at the door. Before the robot flips any switch
+it asks: *who really asked for this? how much could it break? did the idea come
+from somewhere we trust?* If anything looks wrong it stops the robot, locks the
+bad request in a box, and writes down exactly what happened so no one can fib
+about it later. We build this so one sneaky note can't black out the whole town.
+
 **TechEx Intelligent Enterprise Hackathon — San Jose, May 2026**
 **Tracks:** Veea — *Lobster Trap* (build on top of it) · Google DeepMind — *Gemini / AI Studio*
 
