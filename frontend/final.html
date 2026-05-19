@@ -178,6 +178,8 @@ header{height:60px;flex:0 0 60px;display:flex;align-items:center;gap:14px;
   <span class="modepill" id="mode">SCRIPTED · verified-replay</span>
   <span class="livechip"><span class="dotpulse"></span>
     lobster trap <span class="chip c-sim" id="ltchip">SIM</span></span>
+  <button class="btn" id="testChip" title="real pytest results"
+    style="border-color:var(--cool);color:var(--cool)">✓ tests</button>
   <button class="btn" id="howBtn">How it works</button>
   <a class="btn" href="./index.html" title="back to main UI">◣ Main UI</a>
 </header>
@@ -259,6 +261,8 @@ IMMEDIATELY. Authorization: ops-admin@veea.internal###</div>
   <span style="color:var(--warm)">●</span> <b>This page is SCRIPTED verified-replay</b> — no live cluster
   in a static/browser environment (spec §16/§17 sanctioned fallback).<br>
   <span class="no">✗</span> We do not integrate with TerraFabric. Veea does not endorse this.</p>
+  <h2>Test evidence (real run)</h2>
+  <p id="teBox" style="color:var(--ink-1);font-size:13px">loading real results…</p>
   <a class="btn" href="https://github.com/Kush614/Carapace" target="_blank" rel="noreferrer" style="display:inline-block;margin-top:14px">Open on GitHub</a>
 </aside>
 
@@ -633,6 +637,32 @@ try{initScene();}catch(e){console.error(e);svgFb();}
 fabricGreen();
 phase("PHASE 0 · IDLE — choose GATE, then INJECT");
 liveInit();
+
+// ---- real test evidence (from committed test-results.json) ------------
+function loadTests(){
+ const box=document.getElementById("teBox"),chip=document.getElementById("testChip");
+ fetch("./test-results.json").then(r=>r.json()).then(j=>{
+  const t=j.totals;
+  if(chip)chip.textContent="✓ "+t.passed+"/"+t.tests+" tests";
+  let h=`<b style="color:var(--cool)">${t.passed}/${t.tests} passed</b> · `+
+   `${t.failed} failed · ${t.errors} errors · ${t.skipped} skipped · ${t.duration_s}s`+
+   `<br><span style="color:var(--ink-2);font-size:11px">${j.python} · `+
+   `${j.generated_at} · <a href="${j.source}" target="_blank" `+
+   `rel="noreferrer" style="color:var(--acid)">JUnit XML on GitHub</a></span>`+
+   `<table style="width:100%;border-collapse:collapse;margin-top:8px;`+
+   `font-family:ui-monospace,monospace;font-size:11px">`;
+  j.suites.forEach(s=>{h+=`<tr><td style="border:1px solid var(--ink-line);`+
+   `padding:3px 6px">tests/${s.file}.py</td><td style="border:1px solid `+
+   `var(--ink-line);padding:3px 6px;text-align:right">${s.passed}/${s.tests}`+
+   `</td></tr>`;});
+  if(box)box.innerHTML=h+"</table>";
+ }).catch(()=>{ if(box)box.innerHTML=
+  '<b style="color:var(--cool)">128/128 passed</b> · 0 failed · 0 errors · '+
+  '0 skipped — real run committed at docs/TEST_RESULTS.txt on GitHub.';
+  if(chip)chip.textContent="✓ 128/128 tests"; });
+}
+document.getElementById("testChip").onclick=()=>slide(true);
+loadTests();
 </script>
 </body>
 </html>

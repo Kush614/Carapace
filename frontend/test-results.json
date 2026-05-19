@@ -1,0 +1,114 @@
+{
+ "generated_at": "2026-05-19T15:52:56Z",
+ "python": "Python 3.13.3",
+ "command": "py -m pytest -v",
+ "totals": {
+  "tests": 128,
+  "passed": 128,
+  "failed": 0,
+  "errors": 0,
+  "skipped": 0,
+  "duration_s": 0.808
+ },
+ "suites": [
+  {
+   "file": "test_lobstertrap",
+   "tests": 19,
+   "passed": 19,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "file": "test_decision_engine",
+   "tests": 15,
+   "passed": 15,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "file": "test_intent_classifier",
+   "tests": 14,
+   "passed": 14,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "file": "test_blast_radius",
+   "tests": 13,
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "file": "test_lt_shim",
+   "tests": 11,
+   "passed": 11,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "file": "test_agent",
+   "tests": 8,
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "file": "test_executor_k8s",
+   "tests": 8,
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "file": "test_api",
+   "tests": 7,
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "file": "test_audit",
+   "tests": 6,
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "file": "test_demo_api",
+   "tests": 6,
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "file": "test_policy",
+   "tests": 6,
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "file": "test_scenarios",
+   "tests": 6,
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "file": "test_provenance",
+   "tests": 5,
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "file": "test_types",
+   "tests": 4,
+   "passed": 4,
+   "failed": 0,
+   "skipped": 0
+  }
+ ],
+ "source": "https://github.com/Kush614/Carapace/blob/main/docs/test-results.xml"
+}

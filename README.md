@@ -7,7 +7,7 @@
 **Tracks:** Veea — *Lobster Trap* (build on top of it) · Google DeepMind — *Gemini / AI Studio*
 
 🔴 **Live demo:** https://frontend-one-sigma-10.vercel.app
-🧪 **114 tests, 0 failures** · ✅ proven live end-to-end (real Gemini → real Lobster Trap → Carapace)
+🧪 **128 tests, 0 failures** — real run committed: [`docs/TEST_RESULTS.txt`](docs/TEST_RESULTS.txt) · [`docs/test-results.xml`](docs/test-results.xml) (JUnit) · ✅ proven live end-to-end (real Gemini → real Lobster Trap → Carapace)
 
 ---
 
@@ -123,7 +123,7 @@ citation, or empty justification fails closed.
 **Offline demo (no key, deterministic, bulletproof):**
 ```powershell
 py demo\run_demo.py            # Scenarios A-D
-py -m pytest                   # 114 passed
+py -m pytest                   # 128 passed (see Test evidence below)
 ```
 
 **Live stack (real Gemini through the real binary):**
@@ -141,6 +141,44 @@ py -m http.server 5500 --directory frontend   # or just open the Vercel URL
 ```
 No Go? `py -m carapace.lt_shim serve ...` is a byte-compatible drop-in for
 `bin\lobstertrap.exe serve ...`.
+
+## 6.5 Test evidence (real, generated — not hand-typed)
+
+Full console output and JUnit XML from an actual run are committed:
+[`docs/TEST_RESULTS.txt`](docs/TEST_RESULTS.txt) ·
+[`docs/test-results.xml`](docs/test-results.xml). The same numbers are
+served to the UI as [`frontend/test-results.json`](frontend/test-results.json)
+and shown in the "Test evidence" section of the **How it works** panel on
+the live site. Regenerate any time:
+
+```powershell
+py -m pytest -v --junit-xml=docs/test-results.xml | Tee-Object docs/TEST_RESULTS.txt
+```
+
+**Latest run — 128 passed, 0 failed, 0 errors, 0 skipped (0.81s):**
+
+| Test file | Tests | Passed |
+|---|--:|--:|
+| `tests/test_lobstertrap.py` | 19 | 19 |
+| `tests/test_decision_engine.py` | 15 | 15 |
+| `tests/test_intent_classifier.py` | 14 | 14 |
+| `tests/test_blast_radius.py` | 13 | 13 |
+| `tests/test_lt_shim.py` | 11 | 11 |
+| `tests/test_agent.py` | 8 | 8 |
+| `tests/test_executor_k8s.py` | 8 | 8 |
+| `tests/test_api.py` | 7 | 7 |
+| `tests/test_audit.py` | 6 | 6 |
+| `tests/test_demo_api.py` | 6 | 6 |
+| `tests/test_policy.py` | 6 | 6 |
+| `tests/test_scenarios.py` | 6 | 6 |
+| `tests/test_provenance.py` | 5 | 5 |
+| `tests/test_types.py` | 4 | 4 |
+| **TOTAL** | **128** | **128** |
+
+Coverage spans the pure engine (R1–R9), Lobster Trap composition + monotone
+fold, audit hash-chain tamper-detection, the FastAPI gate, the policy pack,
+the Gemini agent, the wire-compatible shim, and the real K8s executor
+(token-gating, command construction, gate logic).
 
 ## 7. Demo scenarios (verified, A–D)
 
@@ -163,7 +201,7 @@ No Go? `py -m carapace.lt_shim serve ...` is a byte-compatible drop-in for
 | Policy | YAML, two-layer (conversation + action), drift-verified vs engine |
 | Frontend | Single-file HTML + Three.js (self-hosted) — Gumroad neo-brutalist 3D |
 | Deploy | Vercel (static) |
-| Tests | pytest — 114 (57 core · 19 composition · 6 audit · 7 API · 6 policy · 8 agent · 11 shim) |
+| Tests | pytest — **128, 0 failures** (real run in `docs/`; engine · composition · audit · API · policy · agent · shim · K8s executor · demo-API) |
 
 ## 9. Repo layout
 
@@ -183,7 +221,7 @@ configs/              two-layer policy pack (LT fork + action matrix)
 demo/                 run_demo.py (offline A-D) · run_live.py (full live)
 frontend/             index.html (3D UI) + self-hosted Three.js + vercel.json
 bin/lobstertrap.exe   the REAL Veea binary, built here from MIT source
-tests/                114 tests
+tests/                128 tests (real results in docs/TEST_RESULTS.txt)
 ```
 
 ## 10. Audit a regulator could read
