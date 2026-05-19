@@ -175,12 +175,14 @@ header{height:60px;flex:0 0 60px;display:flex;align-items:center;gap:14px;
   <span class="wm">CARAPACE<span class="t"> ◣</span></span>
   <span class="dv"></span><span class="tag">Action-Layer Trust Gate</span>
   <span class="grow"></span>
-  <span class="modepill" id="mode">SCRIPTED · verified-replay</span>
+  <a class="modepill" id="mode" href="./about.html#status"
+    style="text-decoration:none" title="what's real — full status">VERIFIED REPLAY ▸</a>
   <span class="livechip"><span class="dotpulse"></span>
-    lobster trap <span class="chip c-sim" id="ltchip">SIM</span></span>
+    lobster trap <span class="chip c-sim" id="ltchip">replay</span></span>
   <button class="btn" id="testChip" title="real pytest results"
     style="border-color:var(--cool);color:var(--cool)">✓ tests</button>
   <button class="btn" id="howBtn">How it works</button>
+  <a class="btn" href="./about.html">About</a>
   <a class="btn" href="./index.html" title="back to main UI">◣ Main UI</a>
 </header>
 
@@ -206,8 +208,8 @@ header{height:60px;flex:0 0 60px;display:flex;align-items:center;gap:14px;
   </div>
   <div class="panes">
     <section class="pane lt">
-      <div class="ph"><span class="lbl">▮ Lobster Trap · live feed</span>
-        <span class="chip c-sim">SIM</span></div>
+      <div class="ph"><span class="lbl">▮ Lobster Trap · feed</span>
+        <span class="chip c-sim" title="verified replay — see About → status">replay</span></div>
       <div class="pb" id="ltb"><span style="color:var(--ink-2)">awaiting traffic…</span></div>
     </section>
     <section class="pane ca">
@@ -217,7 +219,7 @@ header{height:60px;flex:0 0 60px;display:flex;align-items:center;gap:14px;
     </section>
     <section class="pane">
       <div class="ph"><span class="lbl">▮ kubectl witness</span>
-        <span class="chip c-sim">SIM</span></div>
+        <span class="chip c-sim" title="verified replay — see About → status">replay</span></div>
       <div class="pb" style="padding:0"><div class="kx">
         <div class="term"><h4>kubectl get networkpolicy -A -w</h4><div id="kNp" class="ln" style="color:var(--ink-2)">No resources found.</div></div>
         <div class="term"><h4>kubectl get pods -n site-sj-01 -w</h4><div id="kPods" class="ln">nginx-r1..r4  1/1 Running</div></div>
