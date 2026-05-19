@@ -71,7 +71,7 @@ header{height:64px;flex:0 0 64px;display:flex;align-items:center;
 .shell{flex:1;display:flex;min-height:0}
 .rail{width:320px;flex:0 0 320px;border-right:var(--border);
   padding:20px;display:flex;flex-direction:column;gap:18px;overflow:auto}
-.stage{flex:1;display:flex;flex-direction:column;min-width:0}
+.stage{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
 
 /* ---------- scenario cards ---------- */
 .scn{display:flex;flex-direction:column;gap:10px}
@@ -112,7 +112,8 @@ header{height:64px;flex:0 0 64px;display:flex;align-items:center;
 .tagchip.LIVE{color:var(--cool)} .tagchip.SHIM{color:var(--warm)}
 
 /* ---------- 3D ---------- */
-.scene-wrap{flex:0 0 55%;position:relative;border-bottom:var(--border)}
+.scene-wrap{flex:11 1 0;min-height:200px;position:relative;
+  border-bottom:var(--border)}
 #scene{width:100%;height:100%;display:block}
 #svgfallback{display:none;width:100%;height:100%}
 .attack-toast{position:absolute;left:50%;bottom:20px;
@@ -127,7 +128,7 @@ header{height:64px;flex:0 0 64px;display:flex;align-items:center;
 .scene-note.show{opacity:1}
 
 /* ---------- bottom panels ---------- */
-.bottom{flex:1;display:flex;min-height:0}
+.bottom{flex:9 1 0;display:flex;min-height:170px}
 .pane{flex:1;display:flex;flex-direction:column;min-width:0;
   border-right:var(--border)}
 .pane:last-child{border-right:none}
@@ -221,6 +222,22 @@ header{height:64px;flex:0 0 64px;display:flex;align-items:center;
   font-family:var(--font-display);font-size:14px;letter-spacing:.08em;
   color:var(--ink-1);padding:40px}
 @media (max-width:1279px){.gate{display:flex}}
+/* short viewports: shrink the 3D band, keep both panels on-screen, and
+   allow the shell to scroll as a last resort so nothing is ever cut off */
+@media (max-height:820px){
+  .scene-wrap{flex:8 1 0;min-height:160px}
+  .bottom{min-height:200px}
+}
+@media (max-height:680px){
+  header{height:52px;flex:0 0 52px}
+  .scene-wrap{flex:6 1 0;min-height:130px}
+  .bottom{flex:10 1 0}
+  .shell{overflow-y:auto}
+  .rail{overflow:visible}
+}
+@media (max-height:560px){
+  .stage{min-height:520px}        /* let the page scroll instead of clipping */
+}
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}}
 </style>
